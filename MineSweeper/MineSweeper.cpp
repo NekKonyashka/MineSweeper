@@ -17,7 +17,9 @@ void show();
 void showMines();
 void spawnMines();
 bool checkFieldOfMine(Point pos);
+bool isChecked(Point pos);
 void checkAround(Point pos);
+void checkNeibours(Point pos,Point parent);
 
 int main()
 {
@@ -29,12 +31,15 @@ int main()
         show();
         if (scanf_s("%hu %hu", &x, &y) == 2 && x >= 0 && y >= 0 && x < SIZE && y < SIZE)
         {
-            if (!checkFieldOfMine({ x,y })) {
+            Point pos = { x,y };
+            if (!checkFieldOfMine(pos)) {
                 is_failure = true;
                 is_end = true;
             }
             else {
-                checkAround({ x,y });
+                if (!isChecked(pos)) {
+                    checkAround(pos);
+                }
             }
         }
         system("cls");
@@ -67,24 +72,26 @@ bool isChecked(Point pos) {
 }
 
 void checkAround(Point pos) {
-    if (!isChecked(pos)) {
-        checkedFields.push_back(pos);
-        short count = 0, f_x = pos.x - 1, f_y = pos.y - 1;
-        for (short i = f_y; i <= pos.y + 1; i++) {
-            for (short j = f_x; j <= pos.x + 1; j++) {
-                if (!checkFieldOfMine({j,i})) {
-                    count++;
-                }
+    checkedFields.push_back(pos);
+    short count = 0, f_x = pos.x - 1, f_y = pos.y - 1;
+    for (short i = f_y; i <= pos.y + 1; i++) {
+        for (short j = f_x; j <= pos.x + 1; j++) {
+            if (!checkFieldOfMine({ j,i })) {
+                count++;
             }
         }
-        field[pos.y][pos.x] = (char)(count + '0');
-        if (count == 0) {
-            for (short i = f_y; i <= pos.y + 1; i++) {
-                for (short j = f_x; j <= pos.x + 1; j++) {
-                    if (!isChecked({j,i}) && (i >= 0 && i < SIZE) && (j >= 0 && j < SIZE)) {
-                        checkAround({ j,i });
-                    }
-                }
+    }
+    field[pos.y][pos.x] = (char)(count + '0');
+    if (count == 0) {
+        checkNeibours({ f_x,f_y }, pos);
+    }
+}
+
+void checkNeibours(Point pos,Point parent) {
+    for (short i = pos.y; i <= parent.y + 1; i++) {
+        for (short j = pos.x; j <= parent.x + 1; j++) {
+            if (!isChecked({ j,i }) && (i >= 0 && i < SIZE) && (j >= 0 && j < SIZE)) {
+                checkAround({ j,i });
             }
         }
     }
